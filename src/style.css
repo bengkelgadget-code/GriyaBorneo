@@ -1,0 +1,213 @@
+/* Design System: Minimalist & Seamless */
+:root {
+  /* Colors */
+  --c-primary-light: #10b981;
+  --c-primary: #065f46;
+  --c-primary-dark: #022c22;
+  
+  --c-accent-light: #fde68a;
+  --c-accent: #d4a017;
+  --c-accent-dark: #b45309;
+  
+  --c-bg: #ffffff; /* Clean white background */
+  --c-surface: #ffffff;
+  --c-surface-alt: #f8fafc;
+  --c-text-main: #0f172a;
+  --c-text-muted: #64748b;
+  --c-border: #f1f5f9;
+  
+  /* Status Colors */
+  --c-success: #10b981;
+  --c-danger: #ef4444;
+  --c-warning: #f59e0b;
+  --c-info: #3b82f6;
+
+  /* Typography */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  
+  /* Layout */
+  --max-width: 1280px;
+  --radius-sm: 0.25rem;
+  --radius: 0.75rem;
+  --radius-lg: 1.5rem;
+  
+  /* Shadows - simplified for clean look */
+  --shadow-sm: 0 2px 8px rgb(0 0 0 / 0.04);
+  --shadow: 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 24px rgb(0 0 0 / 0.08);
+  --shadow-hover: 0 12px 28px rgb(0 0 0 / 0.12);
+}
+
+/* Reset & Base Styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--c-text-main);
+  background-color: var(--c-bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* Prevent horizontal scroll during transitions */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--c-primary-dark);
+  line-height: 1.2;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Utilities */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* View Transitions Global CSS */
+::view-transition-group(*) {
+  animation-duration: 0.6s;
+  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+/* Custom fade and slide for elements without shared name */
+::view-transition-old(root) {
+  animation: fade-out 0.3s cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: slide-up-fade 0.4s 0.2s cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+@keyframes fade-out {
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 2rem;
+  border-radius: 99px; /* Pill shape for minimalist aesthetic */
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: var(--c-primary);
+  color: white;
+}
+.btn-primary:hover {
+  background-color: var(--c-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-accent {
+  background-color: var(--c-accent);
+  color: white;
+}
+.btn-accent:hover {
+  background-color: var(--c-accent-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-outline {
+  border: 1px solid var(--c-border);
+  color: var(--c-text-main);
+  background: transparent;
+}
+.btn-outline:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+.form-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--c-text-muted);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.form-control {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+  background-color: var(--c-surface-alt);
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--c-primary-light);
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Admin Dashboard Layout utility */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--c-surface-alt);
+}
+.admin-sidebar {
+  width: 250px;
+  background-color: var(--c-primary-dark);
+  color: white;
+  flex-shrink: 0;
+}
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+  }
+}
+
