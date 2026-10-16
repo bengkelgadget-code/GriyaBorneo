@@ -1,2 +1,0 @@
-# GriyaBorneo
-web app property
