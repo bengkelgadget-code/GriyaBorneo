@@ -56,6 +56,12 @@ const emit = defineEmits(['update:modelValue'])
 const isDragging = ref(false)
 const uploading = ref(false)
 
+// Keamanan upload: whitelist ekstensi + batas ukuran (ditegakkan di kode,
+// bukan cuma label). SVG ditolak mentah-mentah karena bisa berisi JavaScript
+// -> stored XSS lewat URL gambar publik.
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp']
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+
 const handleDrop = (e) => {
   isDragging.value = false
   const files = e.dataTransfer.files
@@ -75,9 +81,27 @@ const uploadFiles = async (files) => {
   
   try {
     for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) continue
-      
-      const fileExt = file.name.split('.').pop()
+      const fileExt = (file.name.split('.').pop() || '').toLowerCase()
+      const mimeType = (file.type || '').toLowerCase()
+
+      // 1. Tolak SVG (bisa berisi <script> -> stored XSS via URL publik)
+      if (fileExt === 'svg' || mimeType.includes('svg')) {
+        alert(`File "${file.name}" ditolak: format SVG tidak diizinkan demi keamanan.`)
+        continue
+      }
+
+      // 2. Hanya ekstensi & MIME image yang di-whitelist
+      if (!ALLOWED_EXTENSIONS.includes(fileExt) || !mimeType.startsWith('image/')) {
+        alert(`File "${file.name}" ditolak: hanya JPG, PNG, WEBP yang diizinkan.`)
+        continue
+      }
+
+      // 3. Batas ukuran 5MB (sebelumnya hanya label, tidak ditegakkan)
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File "${file.name}" melebihi batas 5MB.`)
+        continue
+      }
+
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
       const filePath = `properties/${fileName}`
       
