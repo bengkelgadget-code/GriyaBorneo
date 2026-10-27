@@ -6,7 +6,19 @@
         <ArrowLeftIcon size="24" />
       </button>
       
-      <div class="main-image-container" v-if="property.images && property.images.length">
+      <div 
+        class="main-image-container" 
+        v-if="property.images && property.images.length"
+        @click="openLightbox"
+        title="Klik untuk memperbesar gambar"
+      >
+        <!-- Ambient blurred backdrop matching original image palette -->
+        <img 
+          :src="formatImageUrl(property.images[currentImageIndex])" 
+          class="backdrop-blur-img" 
+          aria-hidden="true" 
+        />
+
         <transition name="gallery-fade" mode="out-in">
           <img 
             :key="currentImageIndex"
@@ -19,12 +31,18 @@
           />
         </transition>
 
+        <!-- Zoom Hint Pill -->
+        <div class="zoom-pill">
+          <ZoomInIcon size="14" />
+          <span>Perbesar</span>
+        </div>
+
         <!-- Navigation Arrows (if > 1 image) -->
         <template v-if="property.images && property.images.length > 1">
-          <button class="nav-btn prev-btn" @click="prevImage" title="Foto Sebelumnya">
+          <button class="nav-btn prev-btn" @click.stop="prevImage" title="Foto Sebelumnya">
             <ChevronLeftIcon size="24" />
           </button>
-          <button class="nav-btn next-btn" @click="nextImage" title="Foto Berikutnya">
+          <button class="nav-btn next-btn" @click.stop="nextImage" title="Foto Berikutnya">
             <ChevronRightIcon size="24" />
           </button>
 
@@ -120,6 +138,51 @@
       </svg>
       <span class="wa-tooltip">Hubungi via WhatsApp</span>
     </button>
+    <!-- Lightbox Popup Perbesar Foto (Tengah & Sisi Transparan Gelap 80%) -->
+    <teleport to="body">
+      <transition name="lightbox-anim">
+        <div 
+          v-if="isLightboxOpen" 
+          class="lightbox-backdrop" 
+          @click="closeLightbox"
+        >
+          <!-- Tombol Tutup -->
+          <button class="lightbox-close" @click.stop="closeLightbox" title="Tutup (Esc)">
+            <XIcon size="26" />
+          </button>
+
+          <!-- Stage Gambar Tengah Sesuai Aslinya -->
+          <div class="lightbox-stage" @click.stop>
+            <transition name="gallery-fade" mode="out-in">
+              <img 
+                :key="currentImageIndex"
+                :src="formatImageUrl(property.images[currentImageIndex])" 
+                :alt="`${property.title} - Foto ${currentImageIndex + 1}`"
+                class="lightbox-img"
+                @touchstart="onTouchStart"
+                @touchend="onTouchEnd"
+              />
+            </transition>
+
+            <!-- Navigasi Panah di Popup -->
+            <template v-if="property.images && property.images.length > 1">
+              <button class="lightbox-nav-btn lightbox-prev" @click.stop="prevImage" title="Sebelumnya (←)">
+                <ChevronLeftIcon size="30" />
+              </button>
+              <button class="lightbox-nav-btn lightbox-next" @click.stop="nextImage" title="Berikutnya (→)">
+                <ChevronRightIcon size="30" />
+              </button>
+            </template>
+
+            <!-- Keterangan & Counter -->
+            <div class="lightbox-info">
+              <span class="lightbox-counter">{{ currentImageIndex + 1 }} / {{ property.images.length }}</span>
+              <span class="lightbox-hint">Tekan ESC untuk menutup • Klik panah untuk navigasi</span>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </teleport>
   </div>
   
   <div v-else class="loading-full">
@@ -128,7 +191,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { useSettingStore } from '@/stores/settingStore'
@@ -141,7 +204,9 @@ import {
   Maximize as MaximizeIcon,
   CheckCircle as CheckCircleIcon,
   ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon
+  ChevronRight as ChevronRightIcon,
+  ZoomIn as ZoomInIcon,
+  X as XIcon
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -152,8 +217,28 @@ const property = ref(null)
 const currentImageIndex = ref(0)
 const touchStartX = ref(0)
 const touchEndX = ref(0)
+const isLightboxOpen = ref(false)
+
+const openLightbox = () => {
+  isLightboxOpen.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+const closeLightbox = () => {
+  isLightboxOpen.value = false
+  document.body.style.overflow = ''
+}
+
+const handleKeydown = (e) => {
+  if (!isLightboxOpen.value) return
+  if (e.key === 'Escape') closeLightbox()
+  if (e.key === 'ArrowRight') nextImage()
+  if (e.key === 'ArrowLeft') prevImage()
+}
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeydown)
+
   const { data } = await supabase
     .from('properties')
     .select('*')
@@ -166,6 +251,11 @@ onMounted(async () => {
   }
   
   await settingStore.fetchSettings()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  document.body.style.overflow = ''
 })
 
 const nextImage = () => {
@@ -274,16 +364,71 @@ const contactAgent = () => {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
-  background: #000;
+  background: #0b1329;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: zoom-in;
 }
+
+@media (min-width: 992px) {
+  .main-image-container {
+    aspect-ratio: 1 / 1;
+    max-height: 540px;
+  }
+}
+
+/* Ambient blurred background behind image */
+.backdrop-blur-img {
+  position: absolute;
+  inset: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  object-fit: cover;
+  filter: blur(28px) brightness(0.5);
+  opacity: 0.8;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+/* Gambar Utama - Tampil Sesuai Aslinya (contain, tanpa terpotong) */
 .main-image {
+  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   user-select: none;
+  z-index: 2;
+  transition: transform 0.25s ease;
+}
+.main-image-container:hover .main-image {
+  transform: scale(1.015);
+}
+
+/* Zoom Hint Pill */
+.zoom-pill {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 10;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s;
+}
+.main-image-container:hover .zoom-pill {
+  background: rgba(0, 0, 0, 0.85);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Gallery Fade Animation (Smooth & Lightweight) */
@@ -562,5 +707,139 @@ const contactAgent = () => {
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ==============================================================================
+   LIGHTBOX / POPUP PERBESAR GAMBAR (80% TRANSPARAN GELAP & DI TENGAH)
+   ============================================================================== */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 1.5rem;
+  touch-action: none;
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 100002;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.1);
+}
+
+.lightbox-stage {
+  position: relative;
+  max-width: 92vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: zoomInStage 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  user-select: none;
+}
+
+.lightbox-nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 100001;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+.lightbox-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-50%) scale(1.1);
+}
+.lightbox-prev {
+  left: 1.5rem;
+}
+.lightbox-next {
+  right: 1.5rem;
+}
+
+.lightbox-info {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+}
+.lightbox-counter {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+.lightbox-hint {
+  display: none;
+}
+@media (min-width: 768px) {
+  .lightbox-hint {
+    display: inline;
+    opacity: 0.75;
+  }
+}
+
+/* Animasi Lightbox */
+.lightbox-anim-enter-active,
+.lightbox-anim-leave-active {
+  transition: opacity 0.25s ease;
+}
+.lightbox-anim-enter-from,
+.lightbox-anim-leave-to {
+  opacity: 0;
+}
+@keyframes zoomInStage {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>
