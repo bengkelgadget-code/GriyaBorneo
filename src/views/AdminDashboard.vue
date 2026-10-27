@@ -60,7 +60,7 @@
             <td>
               <div class="flex items-center gap-4">
                 <div class="thumbnail">
-                  <img :src="prop.images?.[0] || 'https://via.placeholder.com/80'" alt="thumb" />
+                  <img :src="formatImageUrl(prop.images?.[0])" alt="thumb" />
                 </div>
                 <div>
                   <div class="font-semibold">{{ prop.title }}</div>
@@ -114,7 +114,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { usePropertyStore } from '@/stores/propertyStore'
-import { formatPrice } from '@/utils/formatters'
+import { formatPrice, formatImageUrl } from '@/utils/formatters'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { 
   Plus as PlusIcon,

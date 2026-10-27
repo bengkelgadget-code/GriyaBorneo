@@ -10,7 +10,7 @@
         <transition name="gallery-fade" mode="out-in">
           <img 
             :key="currentImageIndex"
-            :src="property.images[currentImageIndex] || 'https://via.placeholder.com/800x600'" 
+            :src="formatImageUrl(property.images[currentImageIndex])" 
             :alt="`${property.title} - Foto ${currentImageIndex + 1}`"
             class="main-image"
             :style="currentImageIndex === 0 ? `view-transition-name: property-img-${property.id}` : ''"
@@ -44,7 +44,7 @@
           :class="{ active: currentImageIndex === idx }"
           @click="currentImageIndex = idx"
         >
-          <img :src="img" :alt="`Thumbnail ${idx + 1}`" />
+          <img :src="formatImageUrl(img)" :alt="`Thumbnail ${idx + 1}`" />
         </button>
       </div>
     </div>
@@ -132,7 +132,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { useSettingStore } from '@/stores/settingStore'
-import { formatPrice } from '@/utils/formatters'
+import { formatPrice, formatImageUrl } from '@/utils/formatters'
 import { 
   ArrowLeft as ArrowLeftIcon, 
   MapPin as MapPinIcon, 

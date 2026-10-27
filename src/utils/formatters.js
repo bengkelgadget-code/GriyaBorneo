@@ -67,3 +67,21 @@ export function generateWhatsAppUrl(phone, propertyTitle = null) {
   const encodedText = encodeURIComponent(text)
   return `https://wa.me/${cleanPhone}?text=${encodedText}`
 }
+
+/**
+ * Normalizes image URLs, safely converting Google Drive links to displayable CDN URLs.
+ * @param {string} url
+ * @returns {string}
+ */
+export function formatImageUrl(url) {
+  if (!url) return 'https://via.placeholder.com/600x400?text=No+Image'
+  
+  // Format link Google Drive agar bisa di-render langsung di <img>
+  const driveIdMatch = url.match(/(?:id=|file\/d\/)([a-zA-Z0-9_-]+)/)
+  if (url.includes('drive.google.com') && driveIdMatch) {
+    return `https://lh3.googleusercontent.com/d/${driveIdMatch[1]}`
+  }
+  
+  return url
+}
+

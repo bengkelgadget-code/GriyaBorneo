@@ -2,7 +2,7 @@
   <router-link :to="`/property/${property.slug}`" class="property-card">
     <div class="image-wrapper">
       <img 
-        :src="property.images?.[0] || 'https://via.placeholder.com/600x400?text=No+Image'" 
+        :src="formatImageUrl(property.images?.[0])" 
         :alt="property.title"
         class="property-image"
         :style="`view-transition-name: property-img-${property.id}`"
@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { formatPrice } from '@/utils/formatters'
+import { formatPrice, formatImageUrl } from '@/utils/formatters'
 
 defineProps({
   property: {

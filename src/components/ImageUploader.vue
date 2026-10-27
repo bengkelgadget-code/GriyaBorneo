@@ -30,7 +30,7 @@
     <!-- Preview Existing / Uploaded Images -->
     <div class="image-preview-grid" v-if="modelValue && modelValue.length > 0">
       <div v-for="(img, idx) in modelValue" :key="idx" class="preview-item">
-        <img :src="img" alt="Preview" />
+        <img :src="formatImageUrl(img)" alt="Preview" />
         <button class="btn-delete" @click.prevent="removeImage(idx)" title="Hapus Gambar">
           <Trash2Icon size="16" />
         </button>
@@ -41,6 +41,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { formatImageUrl } from '@/utils/formatters'
 import { supabase } from '@/lib/supabase'
 import { UploadCloud as UploadCloudIcon, Trash2 as Trash2Icon } from 'lucide-vue-next'
 
